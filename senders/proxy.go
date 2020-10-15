@@ -112,7 +112,7 @@ func (sender *proxySender) SendMetric(name string, value float64, ts int64, sour
 	return err
 }
 
-func (sender *proxySender) SendDeltaCounter(name string, value float64, source string, tags map[string]string) error {
+func (sender *proxySender) SendDeltaCounter(name string, value float64, ts int64, source string, tags map[string]string) error {
 	if name == "" {
 		return errors.New("empty metric name")
 	}
@@ -120,7 +120,7 @@ func (sender *proxySender) SendDeltaCounter(name string, value float64, source s
 		name = internal.DeltaCounterName(name)
 	}
 	if value > 0 {
-		return sender.SendMetric(name, value, 0, source, tags)
+		return sender.SendMetric(name, value, ts, source, tags)
 	}
 	return nil
 }

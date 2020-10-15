@@ -97,7 +97,7 @@ func (sender *wavefrontSender) SendMetric(name string, value float64, ts int64, 
 	return sender.pointHandler.HandleLine(line)
 }
 
-func (sender *wavefrontSender) SendDeltaCounter(name string, value float64, source string, tags map[string]string) error {
+func (sender *wavefrontSender) sendDeltaCounter(name string, value float64, ts int64, source string, tags map[string]string) error {
 	if name == "" {
 		return fmt.Errorf("empty metric name")
 	}
@@ -105,7 +105,7 @@ func (sender *wavefrontSender) SendDeltaCounter(name string, value float64, sour
 		name = internal.DeltaCounterName(name)
 	}
 	if value > 0 {
-		return sender.SendMetric(name, value, 0, source, tags)
+		return sender.SendMetric(name, value, ts, source, tags)
 	}
 	return nil
 }
