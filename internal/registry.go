@@ -80,7 +80,7 @@ func (registry *MetricRegistry) NewCounter(name string) *MetricCounter {
 	return registry.getOrAdd(name, &MetricCounter{}).(*MetricCounter)
 }
 
-func (registry *MetricRegistry) newDeltaCounter(name string) *DeltaCounter {
+func (registry *MetricRegistry) NewDeltaCounter(name string) *DeltaCounter {
 	return registry.getOrAdd(name, &DeltaCounter{MetricCounter{}}).(*DeltaCounter)
 }
 
@@ -118,12 +118,12 @@ func (registry *MetricRegistry) report() {
 
 	for k, metric := range registry.metrics {
 		switch metric.(type) {
-		case *MetricCounter:
-			registry.sender.SendMetric(registry.prefix+"."+k, float64(metric.(*MetricCounter).count()), 0, "", registry.tags)
 		case *DeltaCounter:
 			deltaCount := metric.(*DeltaCounter).count()
 			registry.sender.SendDeltaCounter(registry.prefix+"."+k, float64(deltaCount), 0, "", registry.tags)
 			metric.(*DeltaCounter).dec(deltaCount)
+		case *MetricCounter:
+			registry.sender.SendMetric(registry.prefix+"."+k, float64(metric.(*MetricCounter).count()), 0, "", registry.tags)
 		case *FunctionalGauge:
 			registry.sender.SendMetric(registry.prefix+"."+k, float64(metric.(*FunctionalGauge).instantValue()), 0, "", registry.tags)
 		case *FunctionalGaugeFloat64:

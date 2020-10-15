@@ -13,6 +13,11 @@ type fakeSender struct {
 	tags   []string
 }
 
+func (f *fakeSender) SendDeltaCounter(name string, value float64, ts int64, source string, tags map[string]string) error {
+	panic("implement me")
+	//TODO
+}
+
 func (f *fakeSender) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
 	f.count = f.count + 1
 	if f.prefix != "" && !strings.HasPrefix(name, f.prefix) {
