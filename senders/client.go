@@ -30,6 +30,12 @@ type wavefrontSender struct {
 	spanLogHandler   *internal.LineHandler
 	eventHandler     *internal.LineHandler
 	internalRegistry *internal.MetricRegistry
+	writeSuccesses	 *internal.DeltaCounter
+	writeErrors		 *internal.DeltaCounter
+	flushSuccesses 	 *internal.DeltaCounter
+	flushErrors		 *internal.DeltaCounter
+	resetSuccesses 	 *internal.DeltaCounter
+	resetErrors	 	 *internal.DeltaCounter
 
 	proxy bool
 }
@@ -62,7 +68,12 @@ func newWavefrontClient(cfg *configuration) (Sender, error) {
 	sender.spanHandler = newLineHandler(reporter, cfg, internal.TraceFormat, "spans", sender.internalRegistry)
 	sender.spanLogHandler = newLineHandler(reporter, cfg, internal.SpanLogsFormat, "span_logs", sender.internalRegistry)
 	sender.eventHandler = newLineHandler(reporter, cfg, internal.EventFormat, "events", sender.internalRegistry)
-
+	sender.writeSuccesses = sender.internalRegistry.NewDeltaCounter("write.success")
+	sender.writeErrors = sender.internalRegistry.NewDeltaCounter("write.errors")
+	sender.flushSuccesses = sender.internalRegistry.NewDeltaCounter("flush.success")
+	sender.flushErrors = sender.internalRegistry.NewDeltaCounter("flush.errors")
+	sender.resetSuccesses = sender.internalRegistry.NewDeltaCounter("reset.success")
+	sender.resetErrors = sender.internalRegistry.NewDeltaCounter("reset.errors")
 	sender.Start()
 	return sender, nil
 }

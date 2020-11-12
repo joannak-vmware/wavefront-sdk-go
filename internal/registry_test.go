@@ -64,7 +64,7 @@ func TestRegistration(t *testing.T) {
 		t.Error("unexpected gauge value")
 	}
 
-	c.inc()
+	c.Inc()
 	if c.count() != 1 {
 		t.Error("unexpected counter value")
 	}
@@ -76,7 +76,7 @@ func TestRegistration(t *testing.T) {
 
 	// verify same counter/gauges are returned
 	altCounter := registry.NewCounter("counter")
-	altCounter.inc()
+	altCounter.Inc()
 	if c.count() != 2 {
 		t.Error("different counter returned")
 	}
