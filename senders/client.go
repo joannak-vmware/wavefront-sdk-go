@@ -30,6 +30,12 @@ type wavefrontSender struct {
 	spanLogHandler   *internal.LineHandler
 	eventHandler     *internal.LineHandler
 	internalRegistry *internal.MetricRegistry
+	writeSuccesses	 *internal.DeltaCounter
+	writeErrors		 *internal.DeltaCounter
+	flushSuccesses 	 *internal.DeltaCounter
+	flushErrors		 *internal.DeltaCounter
+	resetSuccesses 	 *internal.DeltaCounter
+	resetErrors	 	 *internal.DeltaCounter
 
 	//Internal point metrics
 	pointsValid			*internal.DeltaCounter

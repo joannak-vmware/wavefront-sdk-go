@@ -22,22 +22,22 @@ type directSender struct {
 	eventHandler     *internal.LineHandler
 	internalRegistry *internal.MetricRegistry
 
-	//Internal point metrics
+
+	//Metrics for Metric Point Ingestion
 	pointsValid			*internal.DeltaCounter
 	pointsInvalid		*internal.DeltaCounter
 	pointsDropped		*internal.DeltaCounter
 
-	// Internal histogram metrics
+	//Metrics for Histogram Distribution Ingestion
 	histogramsValid		*internal.DeltaCounter
 	histogramsInvalid	*internal.DeltaCounter
 	histogramsDropped	*internal.DeltaCounter
 
-	// Internal tracing span metrics
+	//Metrics for Tracing Span Ingestion
 	spansValid			*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
 
-	// Internal span log metrics
 	spanLogsValid		*internal.DeltaCounter
 	spanLogsInvalid		*internal.DeltaCounter
 	spanLogsDropped		*internal.DeltaCounter
@@ -84,7 +84,7 @@ func NewDirectSender(cfg *DirectConfiguration) (Sender, error) {
 
 	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
 	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
-	sender.pointsDropped = sender.internalRegistry.NewDeltaCounter("points.dropped")
+	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.dropped")
 
 	sender.histogramsValid = sender.internalRegistry.NewDeltaCounter("histograms.valid")
 	sender.histogramsInvalid = sender.internalRegistry.NewDeltaCounter("histograms.invalid")
@@ -135,9 +135,10 @@ func (sender *directSender) SendMetric(name string, value float64, ts int64, sou
 	}
 	err = sender.pointHandler.HandleLine(line)
 	if err != nil {
-		sender.pointsDropped.Inc()
+		sender.pointsDropped.Inc() //is correct
+		return err
 	}
-	return err
+	return nil
 }
 
 func (sender *directSender) SendDeltaCounter(name string, value float64, ts int64, source string, tags map[string]string) error {

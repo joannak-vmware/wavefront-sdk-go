@@ -26,31 +26,30 @@ type proxySender struct {
 	defaultSource    string
 	internalRegistry *internal.MetricRegistry
 
-	//Internal point metrics
+	//Metrics for Metric Point Handler
 	pointsValid			*internal.DeltaCounter
 	pointsInvalid		*internal.DeltaCounter
 	pointsDropped		*internal.DeltaCounter
 	pointsDiscarded		*internal.DeltaCounter
 
-	// Internal histogram metrics
+	//Metrics for Histogram Distribution Ingestion
 	histogramsValid		*internal.DeltaCounter
 	histogramsInvalid	*internal.DeltaCounter
 	histogramsDropped	*internal.DeltaCounter
 	histogramsDiscarded	*internal.DeltaCounter
 
-	// Internal tracing span metrics
+	//Metrics for Tracing Span Ingestion
 	spansValid			*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
 	spansDiscarded		*internal.DeltaCounter
 
-	// Internal span log metrics
 	spanLogsValid		*internal.DeltaCounter
 	spanLogsInvalid		*internal.DeltaCounter
 	spanLogsDropped		*internal.DeltaCounter
 	spanLogsDiscarded	*internal.DeltaCounter
 
-	//Internal event metrics
+	//Metrics for Internal Events
 	eventsValid			*internal.DeltaCounter
 	eventsInvalid		*internal.DeltaCounter
 	eventsDropped		*internal.DeltaCounter
@@ -122,6 +121,23 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 	sender.eventsInvalid = sender.internalRegistry.NewDeltaCounter("events.invalid")
 	sender.eventsDropped = sender.internalRegistry.NewDeltaCounter("events.dropped")
 	sender.eventsDiscarded = sender.internalRegistry.NewDeltaCounter("events.discarded")
+
+	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
+	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
+	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.dropped")
+	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.report.errors")
+
+	sender.histogramsValid = sender.internalRegistry.NewDeltaCounter("histograms.valid")
+	sender.histogramsInvalid = sender.internalRegistry.NewDeltaCounter("histograms.invalid")
+	sender.histogramsDropped = sender.internalRegistry.NewDeltaCounter("histograms.dropped")
+
+	sender.spansValid = sender.internalRegistry.NewDeltaCounter("spans.valid")
+	sender.spansInvalid = sender.internalRegistry.NewDeltaCounter("spans.invalid")
+	sender.spansDropped = sender.internalRegistry.NewDeltaCounter("spans.dropped")
+
+	sender.spanLogsValid = sender.internalRegistry.NewDeltaCounter("span_logs.valid")
+	sender.spanLogsInvalid = sender.internalRegistry.NewDeltaCounter("span_logs.invalid")
+	sender.spanLogsDropped = sender.internalRegistry.NewDeltaCounter("span_logs.dropped")
 
 	for _, h := range sender.handlers {
 		if h != nil {
