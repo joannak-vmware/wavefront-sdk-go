@@ -21,6 +21,16 @@ type ProxyConnectionHandler struct {
 	mtx         sync.RWMutex
 	conn        net.Conn
 	writer      *bufio.Writer
+
+	errors 			*DeltaCounter
+	connectErrors	*DeltaCounter
+
+	writeSuccesses	*DeltaCounter
+	writeErrors		*DeltaCounter
+	flushSuccesses	*DeltaCounter
+	flushErrors		*DeltaCounter
+	resetSuccesses	*DeltaCounter
+	resetErrors		*DeltaCounter
 }
 
 func NewProxyConnectionHandler(address string, flushInterval time.Duration) ConnectionHandler {

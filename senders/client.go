@@ -30,12 +30,32 @@ type wavefrontSender struct {
 	spanLogHandler   *internal.LineHandler
 	eventHandler     *internal.LineHandler
 	internalRegistry *internal.MetricRegistry
-	writeSuccesses	 *internal.DeltaCounter
-	writeErrors		 *internal.DeltaCounter
-	flushSuccesses 	 *internal.DeltaCounter
-	flushErrors		 *internal.DeltaCounter
-	resetSuccesses 	 *internal.DeltaCounter
-	resetErrors	 	 *internal.DeltaCounter
+
+	//Internal point metrics
+	pointsValid			*internal.DeltaCounter
+	pointsInvalid		*internal.DeltaCounter
+	pointsDropped		*internal.DeltaCounter
+
+	// Internal histogram metrics
+	histogramsValid		*internal.DeltaCounter
+	histogramsInvalid	*internal.DeltaCounter
+	histogramsDropped	*internal.DeltaCounter
+
+	// Internal tracing span metrics
+	spansValid			*internal.DeltaCounter
+	spansInvalid		*internal.DeltaCounter
+	spansDropped		*internal.DeltaCounter
+
+	// Internal span log metrics
+	spanLogsValid		*internal.DeltaCounter
+	spanLogsInvalid		*internal.DeltaCounter
+	spanLogsDropped		*internal.DeltaCounter
+
+	//Internal event metrics
+	eventsValid			*internal.DeltaCounter
+	eventsInvalid		*internal.DeltaCounter
+	eventsDropped		*internal.DeltaCounter
+	eventsReportErrors	*internal.DeltaCounter
 
 	proxy bool
 }
@@ -68,12 +88,27 @@ func newWavefrontClient(cfg *configuration) (Sender, error) {
 	sender.spanHandler = newLineHandler(reporter, cfg, internal.TraceFormat, "spans", sender.internalRegistry)
 	sender.spanLogHandler = newLineHandler(reporter, cfg, internal.SpanLogsFormat, "span_logs", sender.internalRegistry)
 	sender.eventHandler = newLineHandler(reporter, cfg, internal.EventFormat, "events", sender.internalRegistry)
-	sender.writeSuccesses = sender.internalRegistry.NewDeltaCounter("write.success")
-	sender.writeErrors = sender.internalRegistry.NewDeltaCounter("write.errors")
-	sender.flushSuccesses = sender.internalRegistry.NewDeltaCounter("flush.success")
-	sender.flushErrors = sender.internalRegistry.NewDeltaCounter("flush.errors")
-	sender.resetSuccesses = sender.internalRegistry.NewDeltaCounter("reset.success")
-	sender.resetErrors = sender.internalRegistry.NewDeltaCounter("reset.errors")
+
+	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
+	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
+	sender.pointsDropped = sender.internalRegistry.NewDeltaCounter("points.dropped")
+
+	sender.histogramsValid = sender.internalRegistry.NewDeltaCounter("histograms.valid")
+	sender.histogramsInvalid = sender.internalRegistry.NewDeltaCounter("histograms.invalid")
+	sender.histogramsDropped = sender.internalRegistry.NewDeltaCounter("histograms.dropped")
+
+	sender.spansValid = sender.internalRegistry.NewDeltaCounter("spans.valid")
+	sender.spansInvalid = sender.internalRegistry.NewDeltaCounter("spans.invalid")
+	sender.spansDropped = sender.internalRegistry.NewDeltaCounter("spans.dropped")
+
+	sender.spanLogsValid = sender.internalRegistry.NewDeltaCounter("span_logs.valid")
+	sender.spanLogsInvalid = sender.internalRegistry.NewDeltaCounter("span_logs.invalid")
+	sender.spanLogsDropped = sender.internalRegistry.NewDeltaCounter("span_logs.dropped")
+
+	sender.eventsValid = sender.internalRegistry.NewDeltaCounter("events.valid")
+	sender.eventsInvalid = sender.internalRegistry.NewDeltaCounter("events.invalid")
+	sender.eventsDropped = sender.internalRegistry.NewDeltaCounter("events.dropped")
+
 	sender.Start()
 	return sender, nil
 }
@@ -103,13 +138,21 @@ func (sender *wavefrontSender) Start() {
 func (sender *wavefrontSender) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
 	line, err := MetricLine(name, value, ts, source, tags, sender.defaultSource)
 	if err != nil {
+		sender.pointsInvalid.Inc()
 		return err
+	} else {
+		sender.pointsValid.Inc()
 	}
-	return sender.pointHandler.HandleLine(line)
+	err = sender.pointHandler.HandleLine(line)
+	if err != nil {
+		sender.pointsDropped.Inc()
+	}
+	return err
 }
 
 func (sender *wavefrontSender) SendDeltaCounter(name string, value float64, ts int64, source string, tags map[string]string) error {
 	if name == "" {
+		sender.pointsInvalid.Inc()
 		return fmt.Errorf("empty metric name")
 	}
 	if !internal.HasDeltaPrefix(name) {
@@ -125,28 +168,46 @@ func (sender *wavefrontSender) SendDistribution(name string, centroids []histogr
 	hgs map[histogram.Granularity]bool, ts int64, source string, tags map[string]string) error {
 	line, err := HistoLine(name, centroids, hgs, ts, source, tags, sender.defaultSource)
 	if err != nil {
+		sender.histogramsInvalid.Inc()
 		return err
+	} else {
+		sender.histogramsValid.Inc()
 	}
-	return sender.histoHandler.HandleLine(line)
+	err = sender.histoHandler.HandleLine(line)
+	if err != nil {
+		sender.histogramsDropped.Inc()
+	}
+	return err
 }
 
 func (sender *wavefrontSender) SendSpan(name string, startMillis, durationMillis int64, source, traceId, spanId string,
 	parents, followsFrom []string, tags []SpanTag, spanLogs []SpanLog) error {
 	line, err := SpanLine(name, startMillis, durationMillis, source, traceId, spanId, parents, followsFrom, tags, spanLogs, sender.defaultSource)
 	if err != nil {
+		sender.spansInvalid.Inc()
 		return err
+	} else {
+		sender.spansValid.Inc()
 	}
 	err = sender.spanHandler.HandleLine(line)
 	if err != nil {
+		sender.spansDropped.Inc()
 		return err
 	}
 
 	if len(spanLogs) > 0 {
 		logs, err := SpanLogJSON(traceId, spanId, spanLogs)
 		if err != nil {
+			sender.spanLogsInvalid.Inc()
 			return err
+		} else {
+			sender.spanLogsValid.Inc()
 		}
-		return sender.spanLogHandler.HandleLine(logs)
+		err =  sender.spanLogHandler.HandleLine(logs)
+		if err != nil {
+			sender.spanLogsDropped.Inc()
+		}
+		return err
 	}
 	return nil
 }
@@ -160,9 +221,16 @@ func (sender *wavefrontSender) SendEvent(name string, startMillis, endMillis int
 		line, err = EventLineJSON(name, startMillis, endMillis, source, tags, setters...)
 	}
 	if err != nil {
+		sender.eventsInvalid.Inc()
 		return err
+	} else {
+		sender.eventsValid.Inc()
 	}
-	return sender.eventHandler.HandleLine(line)
+	err = sender.eventHandler.HandleLine(line)
+	if err != nil {
+		sender.eventsDropped.Inc()
+	}
+	return err
 }
 
 func (sender *wavefrontSender) Close() {
