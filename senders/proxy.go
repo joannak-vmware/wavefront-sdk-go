@@ -26,22 +26,20 @@ type proxySender struct {
 	defaultSource    string
 	internalRegistry *internal.MetricRegistry
 
-	//Metrics for Metric Point Handler
 	pointsValid			*internal.DeltaCounter
 	pointsInvalid		*internal.DeltaCounter
 	pointsDropped		*internal.DeltaCounter
 	pointsDiscarded		*internal.DeltaCounter
 
-	//Metrics for Histogram Distribution Ingestion
 	histogramsValid		*internal.DeltaCounter
 	histogramsInvalid	*internal.DeltaCounter
 	histogramsDropped	*internal.DeltaCounter
 	histogramsDiscarded	*internal.DeltaCounter
 
-	//Metrics for Tracing Span Ingestion
 	spansValid			*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
+
 	spansDiscarded		*internal.DeltaCounter
 
 	spanLogsValid		*internal.DeltaCounter
@@ -49,7 +47,6 @@ type proxySender struct {
 	spanLogsDropped		*internal.DeltaCounter
 	spanLogsDiscarded	*internal.DeltaCounter
 
-	//Metrics for Internal Events
 	eventsValid			*internal.DeltaCounter
 	eventsInvalid		*internal.DeltaCounter
 	eventsDropped		*internal.DeltaCounter
@@ -124,8 +121,7 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 
 	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
 	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
-	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.dropped")
-	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.report.errors")
+	sender.pointsDropped = sender.internalRegistry.NewDeltaCounter("points.dropped")
 
 	sender.histogramsValid = sender.internalRegistry.NewDeltaCounter("histograms.valid")
 	sender.histogramsInvalid = sender.internalRegistry.NewDeltaCounter("histograms.invalid")
@@ -257,7 +253,6 @@ func (sender *proxySender) SendSpan(name string, startMillis, durationMillis int
 	line, err := SpanLine(name, startMillis, durationMillis, source, traceId, spanId, parents, followsFrom, tags, spanLogs, sender.defaultSource)
 	if err != nil {
 		sender.spansInvalid.Inc()
-
 		return err
 	} else {
 		sender.spansValid.Inc()
