@@ -39,7 +39,6 @@ type proxySender struct {
 	spansValid			*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
-
 	spansDiscarded		*internal.DeltaCounter
 
 	spanLogsValid		*internal.DeltaCounter
@@ -122,18 +121,27 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
 	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
 	sender.pointsDropped = sender.internalRegistry.NewDeltaCounter("points.dropped")
+	sender.pointsDiscarded = sender.internalRegistry.NewDeltaCounter("points.discarded")
 
 	sender.histogramsValid = sender.internalRegistry.NewDeltaCounter("histograms.valid")
 	sender.histogramsInvalid = sender.internalRegistry.NewDeltaCounter("histograms.invalid")
 	sender.histogramsDropped = sender.internalRegistry.NewDeltaCounter("histograms.dropped")
+	sender.histogramsDiscarded = sender.internalRegistry.NewDeltaCounter("histograms.discarded")
 
 	sender.spansValid = sender.internalRegistry.NewDeltaCounter("spans.valid")
 	sender.spansInvalid = sender.internalRegistry.NewDeltaCounter("spans.invalid")
 	sender.spansDropped = sender.internalRegistry.NewDeltaCounter("spans.dropped")
+	sender.spansDiscarded = sender.internalRegistry.NewDeltaCounter("spans.discarded")
 
 	sender.spanLogsValid = sender.internalRegistry.NewDeltaCounter("span_logs.valid")
 	sender.spanLogsInvalid = sender.internalRegistry.NewDeltaCounter("span_logs.invalid")
 	sender.spanLogsDropped = sender.internalRegistry.NewDeltaCounter("span_logs.dropped")
+	sender.spanLogsDiscarded = sender.internalRegistry.NewDeltaCounter("span_logs.discarded")
+
+	sender.eventsValid = sender.internalRegistry.NewDeltaCounter("events.valid")
+	sender.eventsInvalid = sender.internalRegistry.NewDeltaCounter("events.invalid")
+	sender.eventsDropped = sender.internalRegistry.NewDeltaCounter("events.dropped")
+	sender.eventsDiscarded = sender.internalRegistry.NewDeltaCounter("events.discarded")
 
 	for _, h := range sender.handlers {
 		if h != nil {
@@ -253,6 +261,7 @@ func (sender *proxySender) SendSpan(name string, startMillis, durationMillis int
 	line, err := SpanLine(name, startMillis, durationMillis, source, traceId, spanId, parents, followsFrom, tags, spanLogs, sender.defaultSource)
 	if err != nil {
 		sender.spansInvalid.Inc()
+
 		return err
 	} else {
 		sender.spansValid.Inc()
