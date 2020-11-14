@@ -30,21 +30,32 @@ type proxySender struct {
 	pointsValid			*internal.DeltaCounter
 	pointsInvalid		*internal.DeltaCounter
 	pointsDropped		*internal.DeltaCounter
+	pointsDiscarded		*internal.DeltaCounter
 
 	// Internal histogram metrics
 	histogramsValid		*internal.DeltaCounter
 	histogramsInvalid	*internal.DeltaCounter
 	histogramsDropped	*internal.DeltaCounter
+	histogramsDiscarded	*internal.DeltaCounter
 
 	// Internal tracing span metrics
 	spansValid			*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
+	spansDiscarded		*internal.DeltaCounter
 
 	// Internal span log metrics
 	spanLogsValid		*internal.DeltaCounter
 	spanLogsInvalid		*internal.DeltaCounter
 	spanLogsDropped		*internal.DeltaCounter
+	spanLogsDiscarded	*internal.DeltaCounter
+
+	//Internal event metrics
+	eventsValid			*internal.DeltaCounter
+	eventsInvalid		*internal.DeltaCounter
+	eventsDropped		*internal.DeltaCounter
+	eventsReportErrors	*internal.DeltaCounter
+	eventsDiscarded		*internal.DeltaCounter
 }
 
 // Creates and returns a Wavefront Proxy Sender instance
@@ -90,18 +101,27 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
 	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
 	sender.pointsDropped = sender.internalRegistry.NewDeltaCounter("points.dropped")
+	sender.pointsDiscarded = sender.internalRegistry.NewDeltaCounter("points.discarded")
 
 	sender.histogramsValid = sender.internalRegistry.NewDeltaCounter("histograms.valid")
 	sender.histogramsInvalid = sender.internalRegistry.NewDeltaCounter("histograms.invalid")
 	sender.histogramsDropped = sender.internalRegistry.NewDeltaCounter("histograms.dropped")
+	sender.histogramsDiscarded = sender.internalRegistry.NewDeltaCounter("histograms.discarded")
 
 	sender.spansValid = sender.internalRegistry.NewDeltaCounter("spans.valid")
 	sender.spansInvalid = sender.internalRegistry.NewDeltaCounter("spans.invalid")
 	sender.spansDropped = sender.internalRegistry.NewDeltaCounter("spans.dropped")
+	sender.spansDiscarded = sender.internalRegistry.NewDeltaCounter("spans.discarded")
 
 	sender.spanLogsValid = sender.internalRegistry.NewDeltaCounter("span_logs.valid")
 	sender.spanLogsInvalid = sender.internalRegistry.NewDeltaCounter("span_logs.invalid")
 	sender.spanLogsDropped = sender.internalRegistry.NewDeltaCounter("span_logs.dropped")
+	sender.spanLogsDiscarded = sender.internalRegistry.NewDeltaCounter("span_logs.discarded")
+
+	sender.eventsValid = sender.internalRegistry.NewDeltaCounter("events.valid")
+	sender.eventsInvalid = sender.internalRegistry.NewDeltaCounter("events.invalid")
+	sender.eventsDropped = sender.internalRegistry.NewDeltaCounter("events.dropped")
+	sender.eventsDiscarded = sender.internalRegistry.NewDeltaCounter("events.discarded")
 
 	for _, h := range sender.handlers {
 		if h != nil {
@@ -131,11 +151,13 @@ func (sender *proxySender) Start() {
 func (sender *proxySender) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
 	handler := sender.handlers[metricHandler]
 	if handler == nil {
+		sender.pointsDiscarded.Inc()
 		return errors.New("proxy metrics port not provided, cannot send metric data")
 	}
 
 	if !handler.Connected() {
 		if err := handler.Connect(); err != nil {
+			sender.pointsDiscarded.Inc()
 			return err
 		}
 	}
@@ -171,11 +193,13 @@ func (sender *proxySender) SendDeltaCounter(name string, value float64, ts int64
 func (sender *proxySender) SendDistribution(name string, centroids []histogram.Centroid, hgs map[histogram.Granularity]bool, ts int64, source string, tags map[string]string) error {
 	handler := sender.handlers[histoHandler]
 	if handler == nil {
+		sender.histogramsDiscarded.Inc()
 		return errors.New("proxy distribution port not provided, cannot send distribution data")
 	}
 
 	if !handler.Connected() {
 		if err := handler.Connect(); err != nil {
+			sender.histogramsDiscarded.Inc()
 			return err
 		}
 	}
@@ -196,12 +220,20 @@ func (sender *proxySender) SendDistribution(name string, centroids []histogram.C
 
 func (sender *proxySender) SendSpan(name string, startMillis, durationMillis int64, source, traceId, spanId string, parents, followsFrom []string, tags []SpanTag, spanLogs []SpanLog) error {
 	handler := sender.handlers[spanHandler]
-	if handler == nil {
+	if handler == nil  {
+		sender.spansDiscarded.Inc()
+		if spanLogs != nil {
+			sender.spanLogsDiscarded.Inc()
+		}
 		return errors.New("proxy tracing port not provided, cannot send span data")
 	}
 
 	if !handler.Connected() {
 		if err := handler.Connect(); err != nil {
+			sender.spansDiscarded.Inc()
+			if spanLogs != nil {
+				sender.spanLogsDiscarded.Inc()
+			}
 			return err
 		}
 	}
@@ -209,6 +241,7 @@ func (sender *proxySender) SendSpan(name string, startMillis, durationMillis int
 	line, err := SpanLine(name, startMillis, durationMillis, source, traceId, spanId, parents, followsFrom, tags, spanLogs, sender.defaultSource)
 	if err != nil {
 		sender.spansInvalid.Inc()
+
 		return err
 	} else {
 		sender.spansValid.Inc()
@@ -239,20 +272,28 @@ func (sender *proxySender) SendSpan(name string, startMillis, durationMillis int
 func (sender *proxySender) SendEvent(name string, startMillis, endMillis int64, source string, tags map[string]string, setters ...event.Option) error {
 	handler := sender.handlers[eventHandler]
 	if handler == nil {
+		sender.eventsDiscarded.Inc()
 		return errors.New("proxy events port not provided, cannot send events data")
 	}
 
 	if !handler.Connected() {
 		if err := handler.Connect(); err != nil {
+			sender.eventsDiscarded.Inc()
 			return err
 		}
 	}
 
 	line, err := EventLine(name, startMillis, endMillis, source, tags, setters...)
 	if err != nil {
+		sender.eventsInvalid.Inc()
 		return err
+	} else {
+		sender.eventsValid.Inc()
 	}
 	err = handler.SendData(line)
+	if err != nil {
+		sender.eventsDropped.Inc()
+	}
 	return err
 }
 
