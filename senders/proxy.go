@@ -66,26 +66,6 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 		handlers:      make([]internal.ConnectionHandler, handlersCount),
 	}
 
-	if cfg.FlushIntervalSeconds == 0 {
-		cfg.FlushIntervalSeconds = defaultProxyFlushInterval
-	}
-
-	if cfg.MetricsPort != 0 {
-		sender.handlers[metricHandler] = makeConnHandler(cfg.Host, cfg.MetricsPort, cfg.FlushIntervalSeconds)
-	}
-
-	if cfg.DistributionPort != 0 {
-		sender.handlers[histoHandler] = makeConnHandler(cfg.Host, cfg.DistributionPort, cfg.FlushIntervalSeconds)
-	}
-
-	if cfg.TracingPort != 0 {
-		sender.handlers[spanHandler] = makeConnHandler(cfg.Host, cfg.TracingPort, cfg.FlushIntervalSeconds)
-	}
-
-	if cfg.EventsPort != 0 {
-		sender.handlers[eventHandler] = makeConnHandler(cfg.Host, cfg.EventsPort, cfg.FlushIntervalSeconds)
-	}
-
 	sender.internalRegistry = internal.NewMetricRegistry(
 		sender,
 		internal.SetPrefix("~sdk.go.core.sender.proxy"),
@@ -97,6 +77,28 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 			return sdkVersion
 		})
 	}
+
+	if cfg.FlushIntervalSeconds == 0 {
+		cfg.FlushIntervalSeconds = defaultProxyFlushInterval
+	}
+
+	if cfg.MetricsPort != 0 {
+		sender.handlers[metricHandler] = makeConnHandler(cfg.Host, cfg.MetricsPort, cfg.FlushIntervalSeconds, sender.internalRegistry)
+	}
+
+	if cfg.DistributionPort != 0 {
+		sender.handlers[histoHandler] = makeConnHandler(cfg.Host, cfg.DistributionPort, cfg.FlushIntervalSeconds, sender.internalRegistry)
+	}
+
+	if cfg.TracingPort != 0 {
+		sender.handlers[spanHandler] = makeConnHandler(cfg.Host, cfg.TracingPort, cfg.FlushIntervalSeconds, sender.internalRegistry)
+	}
+
+	if cfg.EventsPort != 0 {
+		sender.handlers[eventHandler] = makeConnHandler(cfg.Host, cfg.EventsPort, cfg.FlushIntervalSeconds, sender.internalRegistry)
+	}
+
+
 
 	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
 	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
@@ -133,10 +135,10 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 	return nil, errors.New("at least one proxy port should be enabled")
 }
 
-func makeConnHandler(host string, port, flushIntervalSeconds int) internal.ConnectionHandler {
+func makeConnHandler(host string, port, flushIntervalSeconds int, internalRegistry *internal.MetricRegistry) internal.ConnectionHandler {
 	addr := host + ":" + strconv.FormatInt(int64(port), 10)
 	flushInterval := time.Second * time.Duration(flushIntervalSeconds)
-	return internal.NewProxyConnectionHandler(addr, flushInterval)
+	return internal.NewProxyConnectionHandler(addr, flushInterval, internalRegistry)
 }
 
 func (sender *proxySender) Start() {
