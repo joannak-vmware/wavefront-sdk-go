@@ -157,6 +157,7 @@ func makeConnHandler(host string, port, flushIntervalSeconds int, prefix string,
 	addr := host + ":" + strconv.FormatInt(int64(port), 10)
 	flushInterval := time.Second * time.Duration(flushIntervalSeconds)
 	return internal.NewProxyConnectionHandler(addr, flushInterval, prefix, internalRegistry)
+
 }
 
 func (sender *proxySender) Start() {

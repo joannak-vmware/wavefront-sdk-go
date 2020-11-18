@@ -35,7 +35,6 @@ func NewProxyConnectionHandler(address string, flushInterval time.Duration, pref
 	}
 	proxyConnectionHandler.writeSuccesses = internalRegistry.NewDeltaCounter(prefix + ".write.success")
 	proxyConnectionHandler.writeErrors = internalRegistry.NewDeltaCounter(prefix + ".write.errors")
-
 	return proxyConnectionHandler
 }
 
