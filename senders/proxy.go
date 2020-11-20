@@ -118,31 +118,6 @@ func NewProxySender(cfg *ProxyConfiguration) (Sender, error) {
 	sender.eventsDropped = sender.internalRegistry.NewDeltaCounter("events.dropped")
 	sender.eventsDiscarded = sender.internalRegistry.NewDeltaCounter("events.discarded")
 
-	sender.pointsValid = sender.internalRegistry.NewDeltaCounter("points.valid")
-	sender.pointsInvalid = sender.internalRegistry.NewDeltaCounter("points.invalid")
-	sender.pointsDropped = sender.internalRegistry.NewDeltaCounter("points.dropped")
-	sender.pointsDiscarded = sender.internalRegistry.NewDeltaCounter("points.discarded")
-
-	sender.histogramsValid = sender.internalRegistry.NewDeltaCounter("histograms.valid")
-	sender.histogramsInvalid = sender.internalRegistry.NewDeltaCounter("histograms.invalid")
-	sender.histogramsDropped = sender.internalRegistry.NewDeltaCounter("histograms.dropped")
-	sender.histogramsDiscarded = sender.internalRegistry.NewDeltaCounter("histograms.discarded")
-
-	sender.spansValid = sender.internalRegistry.NewDeltaCounter("spans.valid")
-	sender.spansInvalid = sender.internalRegistry.NewDeltaCounter("spans.invalid")
-	sender.spansDropped = sender.internalRegistry.NewDeltaCounter("spans.dropped")
-	sender.spansDiscarded = sender.internalRegistry.NewDeltaCounter("spans.discarded")
-
-	sender.spanLogsValid = sender.internalRegistry.NewDeltaCounter("span_logs.valid")
-	sender.spanLogsInvalid = sender.internalRegistry.NewDeltaCounter("span_logs.invalid")
-	sender.spanLogsDropped = sender.internalRegistry.NewDeltaCounter("span_logs.dropped")
-	sender.spanLogsDiscarded = sender.internalRegistry.NewDeltaCounter("span_logs.discarded")
-
-	sender.eventsValid = sender.internalRegistry.NewDeltaCounter("events.valid")
-	sender.eventsInvalid = sender.internalRegistry.NewDeltaCounter("events.invalid")
-	sender.eventsDropped = sender.internalRegistry.NewDeltaCounter("events.dropped")
-	sender.eventsDiscarded = sender.internalRegistry.NewDeltaCounter("events.discarded")
-
 	for _, h := range sender.handlers {
 		if h != nil {
 			sender.Start()
@@ -157,7 +132,6 @@ func makeConnHandler(host string, port, flushIntervalSeconds int, prefix string,
 	addr := host + ":" + strconv.FormatInt(int64(port), 10)
 	flushInterval := time.Second * time.Duration(flushIntervalSeconds)
 	return internal.NewProxyConnectionHandler(addr, flushInterval, prefix, internalRegistry)
-
 }
 
 func (sender *proxySender) Start() {
