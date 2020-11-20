@@ -27,14 +27,14 @@ type ProxyConnectionHandler struct {
 	writeErrors		*DeltaCounter
 }
 
-func NewProxyConnectionHandler(address string, flushInterval time.Duration, internalRegistry *MetricRegistry) ConnectionHandler {
+func NewProxyConnectionHandler(address string, flushInterval time.Duration, prefix string, internalRegistry *MetricRegistry) ConnectionHandler {
 	proxyConnectionHandler := &ProxyConnectionHandler{
 		address:     address,
 		flushTicker: time.NewTicker(flushInterval),
 		internalRegistry: internalRegistry,
 	}
-	proxyConnectionHandler.writeSuccesses = internalRegistry.NewDeltaCounter("write.success")
-	proxyConnectionHandler.writeErrors = internalRegistry.NewDeltaCounter("write.errors")
+	proxyConnectionHandler.writeSuccesses = internalRegistry.NewDeltaCounter(prefix + ".write.success")
+	proxyConnectionHandler.writeErrors = internalRegistry.NewDeltaCounter(prefix + ".write.errors")
 
 	return proxyConnectionHandler
 }
