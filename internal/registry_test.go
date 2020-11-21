@@ -13,6 +13,11 @@ type fakeSender struct {
 	tags   []string
 }
 
+func (f *fakeSender) SendDeltaCounter(name string, value float64, ts int64, source string, tags map[string]string) error {
+	panic("implement me")
+	//TODO
+}
+
 func (f *fakeSender) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
 	f.count = f.count + 1
 	if f.prefix != "" && !strings.HasPrefix(name, f.prefix) {
@@ -59,7 +64,7 @@ func TestRegistration(t *testing.T) {
 		t.Error("unexpected gauge value")
 	}
 
-	c.inc()
+	c.Inc()
 	if c.count() != 1 {
 		t.Error("unexpected counter value")
 	}
@@ -71,7 +76,7 @@ func TestRegistration(t *testing.T) {
 
 	// verify same counter/gauges are returned
 	altCounter := registry.NewCounter("counter")
-	altCounter.inc()
+	altCounter.Inc()
 	if c.count() != 2 {
 		t.Error("different counter returned")
 	}

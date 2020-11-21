@@ -37,6 +37,7 @@ func (reporter directReporter) Report(format string, pointLines string) (*http.R
 	zw := gzip.NewWriter(&buf)
 	_, err := zw.Write([]byte(pointLines))
 	if err != nil {
+		//inc write fail
 		zw.Close()
 		return nil, err
 	}
