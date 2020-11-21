@@ -22,7 +22,7 @@ type directSender struct {
 	eventHandler     *internal.LineHandler
 	internalRegistry *internal.MetricRegistry
 
-	pointsValid			*internal.DeltaCounter
+	pointsValid		*internal.DeltaCounter
 	pointsInvalid		*internal.DeltaCounter
 	pointsDropped		*internal.DeltaCounter
 
@@ -30,7 +30,7 @@ type directSender struct {
 	histogramsInvalid	*internal.DeltaCounter
 	histogramsDropped	*internal.DeltaCounter
 
-	spansValid			*internal.DeltaCounter
+	spansValid		*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
 
@@ -162,9 +162,8 @@ func (sender *directSender) SendDistribution(name string, centroids []histogram.
 	err = sender.histoHandler.HandleLine(line)
 	if err != nil {
 		sender.histogramsDropped.Inc()
-		return err
 	}
-	return nil
+	return err
 }
 
 func (sender *directSender) SendSpan(name string, startMillis, durationMillis int64, source, traceId, spanId string,

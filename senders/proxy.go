@@ -26,7 +26,7 @@ type proxySender struct {
 	defaultSource    string
 	internalRegistry *internal.MetricRegistry
 
-	pointsValid			*internal.DeltaCounter
+	pointsValid		*internal.DeltaCounter
 	pointsInvalid		*internal.DeltaCounter
 	pointsDropped		*internal.DeltaCounter
 	pointsDiscarded		*internal.DeltaCounter
@@ -36,7 +36,7 @@ type proxySender struct {
 	histogramsDropped	*internal.DeltaCounter
 	histogramsDiscarded	*internal.DeltaCounter
 
-	spansValid			*internal.DeltaCounter
+	spansValid		*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
 	spansDiscarded		*internal.DeltaCounter
@@ -46,7 +46,7 @@ type proxySender struct {
 	spanLogsDropped		*internal.DeltaCounter
 	spanLogsDiscarded	*internal.DeltaCounter
 
-	eventsValid			*internal.DeltaCounter
+	eventsValid		*internal.DeltaCounter
 	eventsInvalid		*internal.DeltaCounter
 	eventsDropped		*internal.DeltaCounter
 	eventsReportErrors	*internal.DeltaCounter
