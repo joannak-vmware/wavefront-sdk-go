@@ -24,7 +24,7 @@ type ProxyConnectionHandler struct {
 	internalRegistry *MetricRegistry
 
 	writeSuccesses	*DeltaCounter
-	writeErrors		*DeltaCounter
+	writeErrors	*DeltaCounter
 }
 
 func NewProxyConnectionHandler(address string, flushInterval time.Duration, prefix string, internalRegistry *MetricRegistry) ConnectionHandler {

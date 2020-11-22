@@ -31,53 +31,22 @@ type wavefrontSender struct {
 	eventHandler     *internal.LineHandler
 	internalRegistry *internal.MetricRegistry
 
-	//Internal point metrics
 	pointsValid			*internal.DeltaCounter
 	pointsInvalid		*internal.DeltaCounter
 	pointsDropped		*internal.DeltaCounter
 
-	// Internal histogram metrics
 	histogramsValid		*internal.DeltaCounter
 	histogramsInvalid	*internal.DeltaCounter
 	histogramsDropped	*internal.DeltaCounter
 
-	// Internal tracing span metrics
 	spansValid			*internal.DeltaCounter
 	spansInvalid		*internal.DeltaCounter
 	spansDropped		*internal.DeltaCounter
 
-	// Internal span log metrics
 	spanLogsValid		*internal.DeltaCounter
 	spanLogsInvalid		*internal.DeltaCounter
 	spanLogsDropped		*internal.DeltaCounter
 
-	//Internal event metrics
-	eventsValid			*internal.DeltaCounter
-	eventsInvalid		*internal.DeltaCounter
-	eventsDropped		*internal.DeltaCounter
-	eventsReportErrors	*internal.DeltaCounter
-
-	//Internal point metrics
-	pointsValid			*internal.DeltaCounter
-	pointsInvalid		*internal.DeltaCounter
-	pointsDropped		*internal.DeltaCounter
-
-	// Internal histogram metrics
-	histogramsValid		*internal.DeltaCounter
-	histogramsInvalid	*internal.DeltaCounter
-	histogramsDropped	*internal.DeltaCounter
-
-	// Internal tracing span metrics
-	spansValid			*internal.DeltaCounter
-	spansInvalid		*internal.DeltaCounter
-	spansDropped		*internal.DeltaCounter
-
-	// Internal span log metrics
-	spanLogsValid		*internal.DeltaCounter
-	spanLogsInvalid		*internal.DeltaCounter
-	spanLogsDropped		*internal.DeltaCounter
-
-	//Internal event metrics
 	eventsValid			*internal.DeltaCounter
 	eventsInvalid		*internal.DeltaCounter
 	eventsDropped		*internal.DeltaCounter

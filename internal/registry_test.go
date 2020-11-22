@@ -14,8 +14,7 @@ type fakeSender struct {
 }
 
 func (f *fakeSender) SendDeltaCounter(name string, value float64, ts int64, source string, tags map[string]string) error {
-	panic("implement me")
-	//TODO
+	return nil
 }
 
 func (f *fakeSender) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
